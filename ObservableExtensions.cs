@@ -145,7 +145,7 @@ namespace Pdelvo.Async.Extensions
         public ObservableAwaiter(IObservable<T> observable)
         {
             _observable = observable;
-            observable.Subscribe(this);
+            _disposable = observable.Subscribe(this);
         }
 
         public void OnCompleted(Action moveNext)
