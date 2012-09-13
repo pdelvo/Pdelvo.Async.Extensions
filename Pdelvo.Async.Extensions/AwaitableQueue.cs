@@ -13,9 +13,11 @@ namespace Pdelvo.Async.Extensions
     [Serializable]
     [ComVisible(false)]
     [DebuggerDisplay("Count = {Count}")]
-    public class AwaitableQueue<T> : IProducerConsumerCollection<T>, IEnumerable<T>, ICollection, IEnumerable
+    public sealed class AwaitableQueue<T> : IProducerConsumerCollection<T>, IEnumerable<T>, ICollection, IEnumerable
     {
         ConcurrentQueue<T> _innerQueue = new ConcurrentQueue<T>();
+
+        [NonSerialized]
         TaskCompletionSource<T> _completionSource;
         object _taskCompletionSourceLock = new object();
 

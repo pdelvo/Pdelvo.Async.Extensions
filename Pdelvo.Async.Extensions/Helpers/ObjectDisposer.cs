@@ -17,9 +17,22 @@ namespace Pdelvo.Async.Extensions.Helpers
             _item = item;
         }
 
+        ~ObjectDisposer()
+        {
+            Dispose(false);
+        }
+
         public void Dispose()
         {
-            _disposed(_item);
+            Dispose(true);
+            GC.SuppressFinalize(this);
+
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                _disposed(_item);
         }
     }
 }

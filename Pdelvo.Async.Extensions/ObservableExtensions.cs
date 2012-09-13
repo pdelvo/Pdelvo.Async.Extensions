@@ -17,15 +17,19 @@ namespace Pdelvo.Async.Extensions
             return new ObservableAwaiter<T>(observable);
         }
 
-        public static IObservable<TOutput> SelectAsync<TInput, TOutput>(this IObservable<TInput> observable, Func<TInput, Task<TOutput>> selectAsync)
+        public static IObservable<TOutput> SelectAsync<TInput, TOutput>(this IObservable<TInput> observable, Func<TInput, Task<TOutput>> callFunc)
         {
-            var observer = new AsyncObserver<TInput, TOutput>(selectAsync);
+            if (observable == null) throw new ArgumentNullException("observable");
+
+            var observer = new AsyncObserver<TInput, TOutput>(callFunc);
             observable.Subscribe(observer);
             return observer;
         }
 
-        public static IObservable<T> UnBuffer<T>(this IObservable<IEnumerable<T>> observable)
+        public static IObservable<T> Unbuffer<T>(this IObservable<IEnumerable<T>> observable)
         {
+            if (observable == null) throw new ArgumentNullException("observable");
+            
             var observer = new BufferObserver<T>();
             observable.Subscribe(observer);
             return observer;
@@ -107,6 +111,7 @@ namespace Pdelvo.Async.Extensions
 
             public void OnNext(IEnumerable<T> value)
             {
+                if (value == null) throw new ArgumentNullException("value");
                 foreach (var innerValue in value)
                     foreach (var item in _childObserver)
                     {
@@ -134,9 +139,7 @@ namespace Pdelvo.Async.Extensions
 
     public class ObservableAwaiter<T> : IObserver<T>, INotifyCompletion
     {
-        IObservable<T> _observable;
         bool _isCompleted;
-        Exception _error;
         Action _moveNextAction;
         ConcurrentQueue<T> _items = new ConcurrentQueue<T>();
         IDisposable _disposable;
@@ -144,14 +147,14 @@ namespace Pdelvo.Async.Extensions
 
         public ObservableAwaiter(IObservable<T> observable)
         {
-            _observable = observable;
+            if (observable == null) throw new ArgumentNullException("observable");
             _disposable = observable.Subscribe(this);
         }
 
-        public void OnCompleted(Action moveNext)
+        public void OnCompleted(Action continuation)
         {
             _context = SynchronizationContext.Current ?? default(SynchronizationContext);
-            _moveNextAction = moveNext;
+            _moveNextAction = continuation;
         }
         public T[] GetResult()
         {
@@ -175,7 +178,6 @@ namespace Pdelvo.Async.Extensions
 
         public void OnError(Exception error)
         {
-            _error = error;
         }
 
         public void OnNext(T value)
